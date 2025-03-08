@@ -1,0 +1,6 @@
+# Foundry files
+cache
+out
+
+# Script output file
+proposal_id.txt
