@@ -84,13 +84,11 @@ bytes32 salt = 0x646563656e7472616c697a6174696f6e206973206e6f74206f7074696f6e616
 
 The executor in our case is [`0xdEFd1eDEE3E8c5965216bd59C866f7f5307C9b29`](https://etherscan.io/address/0xdEFd1eDEE3E8c5965216bd59C866f7f5307C9b29), the `EmergencyUpgradeBoard` contract.
 
-Save the following Solidity code as `ProposalId.sol` in your root directory.
-
 ```solidity
 // SPDX-License-Identifier: WTFPL
 pragma solidity ^0.8.28;
 
-contract ProposalId {
+contract ProposalIdGoLive {
     struct Call {
         address target;
         uint256 value;
