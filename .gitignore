@@ -2,5 +2,5 @@
 cache
 out
 
-# Script output file
+# Proposal ID calculation script output file
 proposal_id.txt

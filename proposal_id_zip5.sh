@@ -1,5 +1,25 @@
 #!/usr/bin/env bash
 
+########################
+# Don't trust, verify! #
+########################
+
+# @license GNU Affero General Public License v3.0 only
+# @author pcaversaccio
+
+# Enable strict error handling:
+# -E: Inherit `ERR` traps in functions and subshells.
+# -e: Exit immediately if a command exits with a non-zero status.
+# -u: Treat unset variables as an error and exit.
+# -o pipefail: Return the exit status of the first failed command in a pipeline.
+set -Eeuo pipefail
+
+# Enable debug mode if the environment variable `DEBUG` is set to `true`.
+if [[ "${DEBUG:-false}" == "true" ]]; then
+    # Print each command before executing it.
+    set -x
+fi
+
 # Define the parameters for the `UpgradeProposal` struct.
 readonly CALLS="[(0x303a465b659cbb0ab36ee643ea362c509eeb5213,0,0x79ba5097),(0xc2ee6b6af7d616f6e27ce7f4a451aedc2b0f5f5c,0,0x79ba5097),(0xd7f9f54194c633f36ccd5f3da84ad4a1c38cb2cb,0,0x79ba5097),(0x5d8ba173dc6c3c90c8f7c04c9288bef5fdbad06e,0,0x79ba5097),(0xf553e6d903aa43420ed7e3bc2313be9286a8f987,0,0x79ba5097)]"
 

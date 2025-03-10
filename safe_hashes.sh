@@ -50,16 +50,16 @@ readonly VERIFYING_CONTRACT="0xECE8e30bFc92c2A8e11e6cb2e17B70868572E3f6"
 # Emergency-upgrade-specific parameters.
 # => `keccak256("ExecuteEmergencyUpgradeGuardians(bytes32 id)");`
 readonly EXECUTE_EMERGENCY_UPGRADE_GUARDIANS_TYPEHASH="0xca13e65539327d441ed2bdec279e457a1af26eb3e4dbe09fcd7a8633662af7e2"
-#  => Set the calculated proposal id here.
+#  => Set the calculated proposal ID here.
 readonly PROPOSAL_ID="0xa34bdc028de549c0fbd0374e64eb5977e78f62331f6a55f4f2211348c4902d13"
 
 # Calculate the Safe multisig domain hash.
 safe_domain_hash=$(chisel eval "keccak256(abi.encode(bytes32($SAFE_DOMAIN_SEPARATOR_TYPEHASH), uint256($CHAIN_ID), address($SAFE_MULTISIG_ADDRESS)))" |
-        awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
+    awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
 
 # Calculate the EIP-712 message domain hash.
 message_domain_hash=$(chisel eval "keccak256(abi.encode(bytes32($DOMAIN_SEPARATOR_TYPEHASH), keccak256(bytes('$NAME')), keccak256(bytes('$VERSION')), uint256($CHAIN_ID), address($VERIFYING_CONTRACT)))" |
-        awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
+    awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
 
 # Encode the message.
 message=$(cast abi-encode "ExecuteEmergencyUpgradeGuardians(bytes32,bytes32)" \
