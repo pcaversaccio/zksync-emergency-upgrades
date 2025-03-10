@@ -28,9 +28,6 @@ format_hash() {
     echo "${prefix,,}${rest^^}"
 }
 
-##################
-# CONFIGURE HERE #
-##################
 # => Set your Safe multisig address here.
 readonly SAFE_MULTISIG_ADDRESS="0x538612F6eba6ff80FBD95D60dCDee16b8FfF2c0f"
 
@@ -42,9 +39,6 @@ readonly SAFE_DOMAIN_SEPARATOR_TYPEHASH="0x47e79534a245952e8b16893a336b85a3d9ea9
 # See: https://github.com/safe-global/safe-smart-account/blob/febab5e4e859e6e65914f17efddee415e4992961/contracts/libraries/SignMessageLib.sol#L12-L13.
 readonly SAFE_MSG_TYPEHASH="0x60b3cbf8b4a223d68d641b3b6ddf9a298e7f33710cf3d3a9d1146b5a6150fbca"
 
-##################
-# CONFIGURE HERE #
-##################
 # EIP-712 domain parameters.
 # => `keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");`
 readonly DOMAIN_SEPARATOR_TYPEHASH="0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f"
@@ -53,13 +47,10 @@ readonly VERSION="1"
 readonly CHAIN_ID="1"
 readonly VERIFYING_CONTRACT="0xECE8e30bFc92c2A8e11e6cb2e17B70868572E3f6"
 
-##################
-# CONFIGURE HERE #
-##################
 # Emergency-upgrade-specific parameters.
 # => `keccak256("ExecuteEmergencyUpgradeGuardians(bytes32 id)");`
 readonly EXECUTE_EMERGENCY_UPGRADE_GUARDIANS_TYPEHASH="0xca13e65539327d441ed2bdec279e457a1af26eb3e4dbe09fcd7a8633662af7e2"
-#  => Set here the calculated proposal id.
+#  => Set the calculated proposal id here.
 readonly PROPOSAL_ID="0xa34bdc028de549c0fbd0374e64eb5977e78f62331f6a55f4f2211348c4902d13"
 
 # Calculate the Safe multisig domain hash.

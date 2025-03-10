@@ -202,6 +202,11 @@ Configure the parameters in [`safe_hashes.sh`](./safe_hashes.sh), then run the s
 ./safe_hashes.sh
 ```
 
+The key parameters to configure for an emergency upgrade are:
+
+- `SAFE_MULTISIG_ADDRESS`: Set your Safe multisig address here.
+- `PROPOSAL_ID`: Set the calculated proposal id here.
+
 **Example Output:**
 
 ```console
