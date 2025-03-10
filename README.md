@@ -5,6 +5,7 @@
   - [Example 1 – Go-Live Emergency Upgrade](#example-1--go-live-emergency-upgrade)
   - [Example 2 – Accept Ownership After ZIP5 Emergency Upgrade](#example-2--accept-ownership-after-zip5-emergency-upgrade)
 - [EIP-712-Based Off-Chain Message Safe Hashes](#eip-712-based-off-chain-message-safe-hashes)
+- [💸 Donation](#-donation)
 
 ## Proposal ID Calculation for ZKsync `executeEmergencyUpgrade`s
 
@@ -215,3 +216,7 @@ SafeMessage hash: 0x0b24f0f27141c3cfddcb6748516b026182fba25945dc2b328f32aa0a0222
 Domain hash: 0x63127490E98CEB540DB8DCA78EB231476F5B4061DC5139E45031491BAE94ADDF
 Message hash: 0x021DEF418DA3276B5F47AB23C16FFAEA6B962872D2DDF2EBCC88310E203273ED
 ```
+
+## 💸 Donation
+
+I am a strong advocate of the open-source and free software paradigm. However, if you feel my work deserves a donation, you can send it to this address: [`0xe9Fa0c8B5d7F79DeC36D3F448B1Ac4cEdedE4e69`](https://etherscan.io/address/0xe9Fa0c8B5d7F79DeC36D3F448B1Ac4cEdedE4e69). I can pledge that I will use this money to help fix more existing challenges in the Ethereum ecosystem 🤝.
