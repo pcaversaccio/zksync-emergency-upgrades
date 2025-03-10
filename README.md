@@ -1,9 +1,9 @@
 # ZKsync Emergency Upgrade Verification Tools <!-- omit from toc -->
 
 - [Proposal ID Calculation for ZKsync `executeEmergencyUpgrade`s](#proposal-id-calculation-for-zksync-executeemergencyupgrades)
-- [Usage](#usage)
-  - [Example 1 – Go-Live Emergency Upgrade](#example-1--go-live-emergency-upgrade)
-  - [Example 2 – Accept Ownership After ZIP5 Emergency Upgrade](#example-2--accept-ownership-after-zip5-emergency-upgrade)
+  - [Usage](#usage)
+    - [Example 1 – Go-Live Emergency Upgrade](#example-1--go-live-emergency-upgrade)
+    - [Example 2 – Accept Ownership After ZIP5 Emergency Upgrade](#example-2--accept-ownership-after-zip5-emergency-upgrade)
 - [EIP-712-Based Off-Chain Message Safe Hashes](#eip-712-based-off-chain-message-safe-hashes)
 - [💸 Donation](#-donation)
 
@@ -64,7 +64,7 @@ In order the retrieve the proposal ID, we need to calculate:
 keccak256(abi.encode(_proposal));
 ```
 
-## Usage
+### Usage
 
 > [!NOTE]
 > Ensure that [`forge`](https://github.com/foundry-rs/foundry/tree/master/crates/forge) and [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) are installed locally. For installation instructions, refer to this [guide](https://book.getfoundry.sh/getting-started/installation).
@@ -81,7 +81,7 @@ or
 ./proposal_id_go_live.sh
 ```
 
-### Example 1 – Go-Live Emergency Upgrade
+#### Example 1 – Go-Live Emergency Upgrade
 
 The proposal ID, given by the ZKsync Era UI is `0xdd9aadc3b6e3297fed40a2cf0a7e655ff5af02c9ce918ed0e86f538c1c53ce9d`. So we need to verify that one.
 
@@ -144,7 +144,7 @@ which will output:
 
 Q.E.D. 🥳🥳
 
-### Example 2 – Accept Ownership After ZIP5 Emergency Upgrade
+#### Example 2 – Accept Ownership After ZIP5 Emergency Upgrade
 
 The upgrade data for the emergency upgrade "Accept ownership after ZIP5":
 
