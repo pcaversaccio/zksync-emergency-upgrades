@@ -48,8 +48,8 @@ readonly CHAIN_ID="1"
 readonly VERIFYING_CONTRACT="0xECE8e30bFc92c2A8e11e6cb2e17B70868572E3f6"
 
 # Emergency-upgrade-specific parameters.
-# => `keccak256("ExecuteEmergencyUpgradeGuardians(bytes32 id)");`
-readonly EXECUTE_EMERGENCY_UPGRADE_GUARDIANS_TYPEHASH="0xca13e65539327d441ed2bdec279e457a1af26eb3e4dbe09fcd7a8633662af7e2"
+# => `keccak256("ExecuteEmergencyUpgradeSecurityCouncil(bytes32 id)");`
+readonly EXECUTE_EMERGENCY_UPGRADE_SECURITY_COUNCIL_TYPEHASH="0xca6492c171331a4293d71e9e45f05ca3db6aaf73acc6e0cde07a1bdc2a119cdc"
 #  => Set the calculated proposal ID here.
 readonly PROPOSAL_ID="0xa34bdc028de549c0fbd0374e64eb5977e78f62331f6a55f4f2211348c4902d13"
 
@@ -62,8 +62,8 @@ message_domain_hash=$(chisel eval "keccak256(abi.encode(bytes32($DOMAIN_SEPARATO
 	awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
 
 # Encode the message.
-message=$(cast abi-encode "ExecuteEmergencyUpgradeGuardians(bytes32,bytes32)" \
-	"$EXECUTE_EMERGENCY_UPGRADE_GUARDIANS_TYPEHASH" \
+message=$(cast abi-encode "ExecuteEmergencyUpgradeSecurityCouncil(bytes32,bytes32)" \
+	"$EXECUTE_EMERGENCY_UPGRADE_SECURITY_COUNCIL_TYPEHASH" \
 	"$PROPOSAL_ID")
 
 # Hash the message.

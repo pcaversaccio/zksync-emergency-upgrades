@@ -16,8 +16,8 @@ set -Eeuo pipefail
 
 # Enable debug mode if the environment variable `DEBUG` is set to `true`.
 if [[ "${DEBUG:-false}" == "true" ]]; then
-    # Print each command before executing it.
-    set -x
+	# Print each command before executing it.
+	set -x
 fi
 
 # Define the parameters for the `UpgradeProposal` struct.
@@ -36,7 +36,7 @@ encoded_proposal=$(cast abi-encode "UpgradeProposal(((address,uint256,bytes)[],a
 proposal_id=$(cast keccak "$encoded_proposal")
 
 # Save the proposal ID to a file.
-echo "$proposal_id" > proposal_id.txt
+echo "$proposal_id" >proposal_id.txt
 
 # Output the result.
 echo "Encoded \`UpgradeProposal\` struct: $encoded_proposal"
