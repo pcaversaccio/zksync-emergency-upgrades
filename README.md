@@ -67,7 +67,7 @@ keccak256(abi.encode(_proposal));
 ### Usage
 
 > [!NOTE]
-> Ensure that [`forge`](https://github.com/foundry-rs/foundry/tree/master/crates/forge) and [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) are installed locally. For installation instructions, refer to this [guide](https://book.getfoundry.sh/introduction/installation/).
+> Ensure that [`forge`](https://github.com/foundry-rs/foundry/tree/master/crates/forge) and [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) are installed locally. For installation instructions, refer to this [guide](https://getfoundry.sh/introduction/installation/).
 
 Adjust the `executor`, `salt`, and `calls` parameters either in [`ProposalIdGoLive.sol`](./ProposalIdGoLive.sol) or [`proposal_id_go_live.sh`](./proposal_id_go_live.sh) and invoke
 
