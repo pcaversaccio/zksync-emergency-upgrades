@@ -51,7 +51,7 @@ readonly VERIFYING_CONTRACT="0xECE8e30bFc92c2A8e11e6cb2e17B70868572E3f6"
 # => `keccak256("ExecuteEmergencyUpgradeZKFoundation(bytes32 id)");`
 readonly EXECUTE_EMERGENCY_UPGRADE_ZK_FOUNDATION_TYPEHASH="0xbc65a4e7edaf75c145d74b7c4e65a168cf6bce5e78f11e27fcd63ed0c62afacf"
 #  => Set the calculated proposal ID here.
-readonly PROPOSAL_ID="0x820d3989346828f564c6322b3b47631996ea66f7a826213d95ad69ded62adcdc"
+readonly PROPOSAL_ID="0x8902737c0457ffdc1623387ed17201ccd6184b4cfef9c62dd5f00208e4b6e563"
 
 # Calculate the Safe multisig domain hash.
 safe_domain_hash=$(chisel eval "keccak256(abi.encode(bytes32($SAFE_DOMAIN_SEPARATOR_TYPEHASH), uint256($CHAIN_ID), address($SAFE_MULTISIG_ADDRESS)))" |
