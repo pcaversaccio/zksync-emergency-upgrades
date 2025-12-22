@@ -97,7 +97,7 @@ The executor in our case is [`0xdEFd1eDEE3E8c5965216bd59C866f7f5307C9b29`](https
 
 ```solidity
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.8.30;
+pragma solidity ^0.8.33;
 
 contract ProposalIdGoLive {
     struct Call {
