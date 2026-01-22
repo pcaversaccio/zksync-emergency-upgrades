@@ -40,7 +40,7 @@ fi
 #      - l2GasPerPubdataByteLimit = 800
 #      - factoryDeps = []
 #      - refundRecipient = `0x5555555590930f501c88B73Ea43B3EEb5A71643c` (Refund recipient EOA controlled by Matter Labs)
-# - `0xb900e78b7e22697984872bcae920a347223ba575` = Governance Upgrade Timer
+# - `0xb900e78b7e22697984872bcae920a347223ba575` = Governance upgrade timer contract
 # 	- `0xa39f7449` = `bytes4(keccak256("startTimer()"))`
 readonly CALLS="[(0x303a465b659cbb0ab36ee643ea362c509eeb5213,0,0xac700e63),\
 				 (0x66a5cfb2e9c529f14fe6364ad1075df3a649c0a5,0,0x095ea7b30000000000000000000000008829ad80e425c646dab305381ff105169feece5600000000000000000000000000000000000000000000001ee656cc02b4a80000),\
@@ -60,7 +60,7 @@ encoded_proposal=$(cast abi-encode "UpgradeProposal(((address,uint256,bytes)[],a
 proposal_id=$(cast keccak "$encoded_proposal")
 
 # Save the proposal ID to a file.
-echo "$proposal_id" >proposal_id.txt
+echo "$proposal_id" >proposal_id_stage0.txt
 
 # Output the result.
 echo "Encoded \`UpgradeProposal\` struct (stage 0): $encoded_proposal"

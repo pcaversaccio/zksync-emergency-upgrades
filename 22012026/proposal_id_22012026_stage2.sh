@@ -63,7 +63,7 @@ encoded_proposal=$(cast abi-encode "UpgradeProposal(((address,uint256,bytes)[],a
 proposal_id=$(cast keccak "$encoded_proposal")
 
 # Save the proposal ID to a file.
-echo "$proposal_id" >proposal_id.txt
+echo "$proposal_id" >proposal_id_stage2.txt
 
 # Output the result.
 echo "Encoded \`UpgradeProposal\` struct (stage 2): $encoded_proposal"
