@@ -3,4 +3,4 @@ cache
 out
 
 # Proposal ID calculation script output file
-proposal_id.txt
+proposal_id*.txt
