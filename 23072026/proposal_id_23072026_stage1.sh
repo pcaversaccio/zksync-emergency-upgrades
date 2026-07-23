@@ -30,9 +30,9 @@ fi
 # 	- `0x9b016b8b` = `bytes4(keccak256("setChainCreationParams((address,bytes32,uint64,bytes32,((address,uint8,bool,bytes4[])[],address,bytes),bytes))"))`
 # - `0xc2ee6b6af7d616f6e27ce7f4a451aedc2b0f5f5c` = ZK chain type manager contract
 # 	- `0x2e522851` = `bytes4(keccak256("setNewVersionUpgrade(((address,uint8,bool,bytes4[])[],address,bytes),uint256,uint256,uint256)"))`
-#     - `_oldProtocolVersion` = 124554051588 (`v0.29.4`)
+#     - `_oldProtocolVersion` = 124554051588 (version `x.y.z` decodes to "x * 2**64 + y * 2**32 + z" => 29 * 2**32 + 4 => `v0.29.4`)
 #     - `_oldProtocolVersionDeadline` = `type(uint256).max`
-#     - `_newProtocolVersion` = 124554051589 (`v0.29.5`)
+#     - `_newProtocolVersion` = 124554051589 (version `x.y.z` decodes to "x * 2**64 + y * 2**32 + z" => 29 * 2**32 + 5 => `v0.29.5`)
 #     - new verifier = `0x47fC5273145E053A18C0BBF6d88F8d6d573C3d0e`
 # Note: to verify the 2 `setChainCreationParams` and `setNewVersionUpgrade` calls it is easier to check the transaction simulator (https://github.com/matter-labs/transaction-simulator/tree/2026-07-22-verifier-upgrade-v29.5-mainnet).
 readonly CALLS="[(0xeb998f917e759449046361bc278f63fb6e576f80,0,0x43bf9936),\
