@@ -5,6 +5,9 @@
     - [Example 1 – Go-Live Emergency Upgrade](#example-1--go-live-emergency-upgrade)
     - [Example 2 – Accept Ownership After ZIP5 Emergency Upgrade](#example-2--accept-ownership-after-zip5-emergency-upgrade)
 - [EIP-712-Based Off-Chain Message Safe Hashes](#eip-712-based-off-chain-message-safe-hashes)
+- [Standard Upgrade Verification Tools](#standard-upgrade-verification-tools)
+  - [`Governance`-Based Upgrades: Nested Safe Hashes](#governance-based-upgrades-nested-safe-hashes)
+  - [Security Council Approval of Protocol Upgrades](#security-council-approval-of-protocol-upgrades)
 - [💸 Donation](#-donation)
 
 ## Proposal ID Calculation for ZKsync `executeEmergencyUpgrade`s
@@ -216,6 +219,70 @@ Safe message hash: 0x0b24f0f27141c3cfddcb6748516b026182fba25945dc2b328f32aa0a022
 Domain hash: 0x63127490E98CEB540DB8DCA78EB231476F5B4061DC5139E45031491BAE94ADDF
 Message hash: 0x021DEF418DA3276B5F47AB23C16FFAEA6B962872D2DDF2EBCC88310E203273ED
 ```
+
+## Standard Upgrade Verification Tools
+
+The scripts in [`standard-upgrades`](./standard-upgrades) cover upgrades that are not emergency upgrades. Unlike the per-upgrade scripts above, they take their parameters as flags, so the same script works for every upgrade. They compute every hash locally. With `--rpc-url`, they also read the current nonces and cross-check the hashes against the contracts. Run any of them with `--help` for all flags.
+
+### `Governance`-Based Upgrades: Nested Safe Hashes
+
+The ZKsync OS ecosystem `Governance` is owned by the Security Council Safe [`0xDF19897e2b3c654A6681d6DC02F5E7cE15205c63`](https://etherscan.io/address/0xDF19897e2b3c654A6681d6DC02F5E7cE15205c63), whose owners are the Security Council member Safes. A standard upgrade is a transaction of this Safe, and each member Safe approves it in one of two ways:
+
+- `--onchain-tx`: the member Safe executes `approveHash(safeTxHash)` on the Security Council Safe. This is what Safe{Wallet} proposes when a nested Safe confirms a transaction. It uses the member Safe's nonce.
+- `--offchain-sig`: the member Safe's owners sign an EIP-1271 `SafeMessage` over the Security Council Safe's transaction, with no on-chain transaction.
+
+[`nested_safe_hashes.sh`](./standard-upgrades/nested_safe_hashes.sh) takes the Safe{Wallet} link of the Security Council Safe's transaction. It loads the transaction from the Safe Transaction Service, recomputes its `safeTxHash` locally and stops if it differs from the one in the link. It prints the calls being approved (a `MultiSend` batch is split into its calls), then what the member Safe's owners sign for either way. Example, `acceptOwnership()` on the `Governance`:
+
+```console
+./standard-upgrades/nested_safe_hashes.sh --onchain-tx \
+  --member-safe 0xc3Abc9f9AA75Be8341E831482cdA0125a7B1A23e \
+  --safe-link 'https://app.safe.global/transactions/tx?safe=eth:0xDF19897e2b3c654A6681d6DC02F5E7cE15205c63&id=multisig_0xDF19897e2b3c654A6681d6DC02F5E7cE15205c63_0x7898029075bd291f12f74ffe481ce0a4339c91e179594fadb173f6936d631a03' \
+  --member-nonce 19
+```
+
+```console
+=== Transactions being approved ===
+Call 1:
+  to: 0x3d67838307eedEF76026b84170737254A5FaA438
+  value: 0 wei
+  data: 0x79ba5097
+  decoded:
+    acceptOwnership()
+
+=== Parent Safe transaction ===
+...
+safeTxHash: 0x7898029075bd291f12f74ffe481ce0a4339c91e179594fadb173f6936d631a03 (matches the link)
+
+=== Approve on-chain: the member Safe calls `approveHash` on the parent Safe ===
+...
+Domain hash: 0x8A595A96D77E992BB9FF8B20FC59215C86B17154838B5386D6B264728A1F4462
+Message hash: 0x608AC06E38F20A236D1220CE4A2E138E445DE9BBB6C40E97D79567070D796C76
+safeTxHash: 0xfc69e5001315d483240430f55dadaf20ffca82cea02fc73c639c544ea76d0bdb
+```
+
+Function names are looked up with `cast 4byte-decode`, and the arguments are decoded locally. Without the Safe Transaction Service, pass the transaction as `--to`, `--data`, `--value`, `--operation` and `--nonce` instead of `--safe-link`.
+
+### Security Council Approval of Protocol Upgrades
+
+A standard protocol upgrade passes through the `ProtocolUpgradeHandler`, and the Security Council approves it with `SecurityCouncil.approveUpgradeSecurityCouncil`. Each member Safe signs an off-chain `SafeMessage` over the EIP-712 message `ApproveUpgradeSecurityCouncil(bytes32 id)`. [`safe_hashes_security_council_approve_upgrade.sh`](./standard-upgrades/safe_hashes_security_council_approve_upgrade.sh) takes the proposal ID:
+
+```console
+./standard-upgrades/safe_hashes_security_council_approve_upgrade.sh \
+  --member-safe 0xc3Abc9f9AA75Be8341E831482cdA0125a7B1A23e \
+  --proposal-id 0x77d5461c37515d627820ab6573efe63fb0b253cf83308dbb368b859e9835eaaa
+```
+
+```console
+Proposal ID: 0x77d5461c37515d627820ab6573efe63fb0b253cf83308dbb368b859e9835eaaa
+Security Council: 0x59195219d1176E42f8e607e9AC114926D47f9035 (chain ID 1)
+Member Safe: 0xc3Abc9f9AA75Be8341E831482cdA0125a7B1A23e
+Safe message: 0x86db57b67855110636064406797dbbdc409d97325acf6e943d9b15f25d03e596
+Safe message hash: 0x0f54828176de1029d49f1a9e22958a61335188982538359191b57332aef89739
+Domain hash: 0x8A595A96D77E992BB9FF8B20FC59215C86B17154838B5386D6B264728A1F4462
+Message hash: 0xCD1BA0F46D893CD577A30710F37CDE6543EC1EE960342DD69A56B98340CF1D54
+```
+
+With `--rpc-url`, the script also checks that the Safe is a Security Council member and prints the upgrade's state in the `ProtocolUpgradeHandler`. Only a `Waiting` upgrade can be approved.
 
 ## 💸 Donation
 
