@@ -251,6 +251,12 @@ if [[ -n "$RPC_URL" ]]; then
 fi
 [[ -n "$NONCE" ]] || die "pass --nonce (the parent Safe's nonce of the transaction), --safe-link or --rpc-url"
 [[ "$MODE" == "offchain" || -n "$MEMBER_NONCE" ]] || die "pass --member-nonce (the member Safe's next nonce) or --rpc-url"
+# A malformed value would otherwise be hashed silently: a failing `cast` call nested in another
+# command's arguments does not trigger `set -e`, and `cast keccak` hashes non-`0x` input as a string.
+for number in "$CHAIN_ID" "$VALUE" "$SAFE_TX_GAS" "$BASE_GAS" "$GAS_PRICE" "$NONCE" ${MEMBER_NONCE:+"$MEMBER_NONCE"}; do
+	[[ "$number" =~ ^[0-9]+$ ]] || die "expected a decimal number, got '$number'"
+done
+[[ "$DATA" =~ ^0x([0-9a-fA-F]{2})*$ ]] || die "the calldata must be 0x-prefixed hex, got '$DATA'"
 
 # The parent Safe transaction.
 PARENT_TX=("$TO" "$VALUE" "$DATA" "$OPERATION" "$SAFE_TX_GAS" "$BASE_GAS" "$GAS_PRICE" "$GAS_TOKEN" "$REFUND_RECEIVER" "$NONCE")

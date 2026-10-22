@@ -91,6 +91,8 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 [[ -n "$MEMBER_SAFE" && -n "$PROPOSAL_ID" ]] || usage
+[[ "$PROPOSAL_ID" =~ ^0x[0-9a-fA-F]{64}$ ]] || die "--proposal-id must be 32 bytes of 0x-prefixed hex"
+[[ "$CHAIN_ID" =~ ^[0-9]+$ ]] || die "--chain-id must be a decimal number"
 
 call() {
 	cast call "$@" --rpc-url "$RPC_URL"
