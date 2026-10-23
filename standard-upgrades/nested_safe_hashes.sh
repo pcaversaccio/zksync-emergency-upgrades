@@ -5,6 +5,8 @@
 ########################
 
 # @license GNU Affero General Public License v3.0 only
+# @author pcaversaccio
+# @author Stanislav Bezkorovainyi
 
 # Shows what a member Safe has to sign to approve a transaction of a parent Safe whose
 # owners are themselves Safes. The main use case is the Security Council Safe that owns
@@ -84,15 +86,15 @@ readonly SAFE_TX_TYPEHASH="0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6
 # => `keccak256("SafeMessage(bytes message)");`
 # See: https://github.com/safe-fndn/safe-smart-account/blob/febab5e4e859e6e65914f17efddee415e4992961/contracts/libraries/SignMessageLib.sol#L12-L13.
 readonly SAFE_MSG_TYPEHASH="0x60b3cbf8b4a223d68d641b3b6ddf9a298e7f33710cf3d3a9d1146b5a6150fbca"
-# => `bytes4(keccak256("approveHash(bytes32)"))`
+# => `bytes4(keccak256("approveHash(bytes32)"));`
 readonly APPROVE_HASH_SELECTOR="0xd4d9bdcd"
-# => `bytes4(keccak256("multiSend(bytes)"))`
+# => `bytes4(keccak256("multiSend(bytes)"));`
 readonly MULTI_SEND_SELECTOR="0x8d80ff0a"
 readonly ZERO_ADDRESS="0x0000000000000000000000000000000000000000"
 
-# The canonical `MultiSend` and `MultiSendCallOnly` deployments (v1.3.0 and v1.4.1), the only
+# The canonical `MultiSend` and `MultiSendCallOnly` deployments (`v1.3.0` and `v1.4.1`), the only
 # delegatecall targets that are expected.
-readonly MULTI_SEND_ADDRESSES="0xa238cbeb142c10ef7ad8442c6d1f9e89e07e7761 0x40a2accbd92bca938b02010e17a5b8929b49130d 0x38869bf66a61cf6bdb996a6ae40d5853fd43b526 0x9641d764fc13c8b624c04430c7356c1c7c8102e2"
+readonly MULTI_SEND_ADDRESSES="0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761 0x40A2aCCbd92BCA938b02010E17A5b8929b49130D 0x38869bf66a61cF6bDB996A6aE40D5853Fd43B526 0x9641d764fc13c8B624c04430C7356C1C7C8102e2"
 
 # The mainnet Security Council Safe, owned by the Security Council member Safes.
 PARENT_SAFE="0xDF19897e2b3c654A6681d6DC02F5E7cE15205c63"
@@ -105,24 +107,66 @@ set_mode() {
 }
 while [[ $# -gt 0 ]]; do
 	case "$1" in
-	--onchain-tx) set_mode onchain; shift ;;
-	--offchain-sig) set_mode offchain; shift ;;
-	--member-safe) MEMBER_SAFE="$2"; shift 2 ;;
-	--safe-link) SAFE_LINK="$2"; shift 2 ;;
-	--parent-safe) PARENT_SAFE="$2"; shift 2 ;;
-	--to) TO="$2"; shift 2 ;;
-	--data) DATA="$2"; shift 2 ;;
-	--value) VALUE="$2"; shift 2 ;;
-	--operation) OPERATION="$2"; shift 2 ;;
-	--nonce) NONCE="$2"; shift 2 ;;
-	--member-nonce) MEMBER_NONCE="$2"; shift 2 ;;
-	--chain-id) CHAIN_ID="$2"; shift 2 ;;
-	--rpc-url) RPC_URL="$2"; shift 2 ;;
+	--onchain-tx)
+		set_mode onchain
+		shift
+		;;
+	--offchain-sig)
+		set_mode offchain
+		shift
+		;;
+	--member-safe)
+		MEMBER_SAFE="$2"
+		shift 2
+		;;
+	--safe-link)
+		SAFE_LINK="$2"
+		shift 2
+		;;
+	--parent-safe)
+		PARENT_SAFE="$2"
+		shift 2
+		;;
+	--to)
+		TO="$2"
+		shift 2
+		;;
+	--data)
+		DATA="$2"
+		shift 2
+		;;
+	--value)
+		VALUE="$2"
+		shift 2
+		;;
+	--operation)
+		OPERATION="$2"
+		shift 2
+		;;
+	--nonce)
+		NONCE="$2"
+		shift 2
+		;;
+	--member-nonce)
+		MEMBER_NONCE="$2"
+		shift 2
+		;;
+	--chain-id)
+		CHAIN_ID="$2"
+		shift 2
+		;;
+	--rpc-url)
+		RPC_URL="$2"
+		shift 2
+		;;
 	-h | --help) usage ;;
 	*) die "unknown argument $1" ;;
 	esac
 done
-[[ -n "$MODE" ]] || { echo "Error: pass one of --onchain-tx and --offchain-sig" >&2; usage; }
+[[ -n "$MODE" ]] || {
+	echo "Error: pass one of --onchain-tx and --offchain-sig" >&2
+	usage
+}
 [[ -n "$MEMBER_SAFE" ]] || usage
 if [[ -n "$SAFE_LINK" ]]; then
 	[[ -z "$TO$DATA$NONCE" ]] || die "pass either --safe-link or --to/--data/--nonce, not both"
@@ -182,7 +226,7 @@ print_call() {
 print_calls() {
 	if [[ "$OPERATION" == "1" && "$(lowercase "${DATA:0:10}")" == "$MULTI_SEND_SELECTOR" ]]; then
 		[[ " $MULTI_SEND_ADDRESSES " == *" $(lowercase "$TO") "* ]] ||
-			echo "WARNING: the batch is a delegatecall to $TO, which is not a canonical MultiSend contract"
+			echo "WARNING: the batch is a delegatecall to $TO, which is not a canonical MultiSend contract!"
 		local packed offset=0 index=1 call_operation call_to call_value data_length call_data
 		packed=$(cast calldata-decode "multiSend(bytes)" "$DATA")
 		packed=${packed:2}
@@ -193,13 +237,13 @@ print_calls() {
 			call_value=$(cast to-dec "0x${packed:$((offset + 42)):64}")
 			data_length=$((16#${packed:$((offset + 106)):64}))
 			call_data="0x${packed:$((offset + 170)):$((data_length * 2))}"
-			[[ $call_operation == 0 ]] || echo "WARNING: call $index is a delegatecall"
+			[[ $call_operation == 0 ]] || echo "WARNING: call $index is a delegatecall!"
 			print_call "$index" "$call_to" "$call_value" "$call_data"
 			offset=$((offset + 170 + data_length * 2))
 			index=$((index + 1))
 		done
 	else
-		[[ "$OPERATION" == "0" ]] || echo "WARNING: the transaction is a delegatecall to $TO"
+		[[ "$OPERATION" == "0" ]] || echo "WARNING: the transaction is a delegatecall to $TO!"
 		print_call 1 "$TO" "$VALUE" "$DATA"
 	fi
 }
@@ -215,8 +259,14 @@ if [[ -n "$SAFE_LINK" ]]; then
 	[[ "$SAFE_LINK" =~ multisig_0x[0-9a-fA-F]{40}_(0x[0-9a-fA-F]{64}) ]] || die "the link has no id=multisig_<safe>_<safeTxHash>"
 	LINK_SAFE_TX_HASH=${BASH_REMATCH[1]}
 	case "$chain_prefix" in
-	eth) CHAIN_ID="1"; api="https://safe-transaction-mainnet.safe.global" ;;
-	sep) CHAIN_ID="11155111"; api="https://safe-transaction-sepolia.safe.global" ;;
+	eth)
+		CHAIN_ID="1"
+		api="https://safe-transaction-mainnet.safe.global"
+		;;
+	sep)
+		CHAIN_ID="11155111"
+		api="https://safe-transaction-sepolia.safe.global"
+		;;
 	*) die "unsupported chain prefix $chain_prefix in the link (supported: eth, sep)" ;;
 	esac
 	tx=$(curl -fsSL "$api/api/v2/multisig-transactions/$LINK_SAFE_TX_HASH/") ||

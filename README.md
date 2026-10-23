@@ -222,7 +222,7 @@ Message hash: 0x021DEF418DA3276B5F47AB23C16FFAEA6B962872D2DDF2EBCC88310E203273ED
 
 ## Standard Upgrade Verification Tools
 
-The scripts in [`standard-upgrades`](./standard-upgrades) cover upgrades that are not emergency upgrades. Unlike the per-upgrade scripts above, they take their parameters as flags, so the same script works for every upgrade. They compute every hash locally. With `--rpc-url`, they also read the current nonces and cross-check the hashes against the contracts. Run any of them with `--help` for all flags.
+The scripts in [`standard-upgrades/`](./standard-upgrades) cover upgrades that are _not_ emergency upgrades. Unlike the per-upgrade scripts above, they take their parameters as flags, so the same script works for every upgrade. They compute every hash locally. With `--rpc-url`, they also read the current nonces and cross-check the hashes against the contracts. Run any of them with `--help` for all flags.
 
 ### `Governance`-Based Upgrades: Nested Safe Hashes
 
@@ -240,6 +240,8 @@ The ZKsync OS ecosystem `Governance` is owned by the Security Council Safe [`0xD
   --member-nonce 19
 ```
 
+returns
+
 ```console
 === Transactions being approved ===
 Call 1:
@@ -250,11 +252,30 @@ Call 1:
     acceptOwnership()
 
 === Parent Safe transaction ===
-...
+Parent Safe: 0xDF19897e2b3c654A6681d6DC02F5E7cE15205c63 (chain ID 1)
+to: 0x3d67838307eedEF76026b84170737254A5FaA438
+value: 0
+operation: 0 (call)
+safeTxGas / baseGas / gasPrice: 0 / 0 / 0
+gasToken / refundReceiver: 0x0000000000000000000000000000000000000000 / 0x0000000000000000000000000000000000000000
+nonce: 0
+Domain hash: 0x380C251E2E51B370FAECA80DCE1028F66465B460588C7488E078601E61E0FE83
+Message hash: 0x801356F8395967B55FF8136FF9F45E64D3163F655354676F92081133C9987DEA
 safeTxHash: 0x7898029075bd291f12f74ffe481ce0a4339c91e179594fadb173f6936d631a03 (matches the link)
 
 === Approve on-chain: the member Safe calls `approveHash` on the parent Safe ===
-...
+The member Safe sends its own transaction that calls `approveHash(safeTxHash)` on the parent Safe.
+It is recorded on-chain and counts as the member's signature when the parent transaction is executed.
+It costs gas and uses the member Safe's nonce, so the hashes change if the member Safe executes
+anything else first. This is what Safe{Wallet} proposes when a nested Safe confirms a transaction.
+The owners of the member Safe sign this transaction of the member Safe:
+Member Safe: 0xc3Abc9f9AA75Be8341E831482cdA0125a7B1A23e
+to: 0xDF19897e2b3c654A6681d6DC02F5E7cE15205c63
+value: 0
+data: 0xd4d9bdcd7898029075bd291f12f74ffe481ce0a4339c91e179594fadb173f6936d631a03
+  (approveHash(0x7898029075bd291f12f74ffe481ce0a4339c91e179594fadb173f6936d631a03))
+operation: 0 (call)
+nonce: 19
 Domain hash: 0x8A595A96D77E992BB9FF8B20FC59215C86B17154838B5386D6B264728A1F4462
 Message hash: 0x608AC06E38F20A236D1220CE4A2E138E445DE9BBB6C40E97D79567070D796C76
 safeTxHash: 0xfc69e5001315d483240430f55dadaf20ffca82cea02fc73c639c544ea76d0bdb
@@ -271,6 +292,8 @@ A standard protocol upgrade passes through the `ProtocolUpgradeHandler`, and the
   --member-safe 0xc3Abc9f9AA75Be8341E831482cdA0125a7B1A23e \
   --proposal-id 0x77d5461c37515d627820ab6573efe63fb0b253cf83308dbb368b859e9835eaaa
 ```
+
+returns
 
 ```console
 Proposal ID: 0x77d5461c37515d627820ab6573efe63fb0b253cf83308dbb368b859e9835eaaa

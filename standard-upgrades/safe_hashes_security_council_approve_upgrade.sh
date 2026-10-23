@@ -5,6 +5,8 @@
 ########################
 
 # @license GNU Affero General Public License v3.0 only
+# @author pcaversaccio
+# @author Stanislav Bezkorovainyi
 
 # Shows what a Security Council member Safe signs to approve a standard protocol upgrade
 # via `SecurityCouncil.approveUpgradeSecurityCouncil(id, signers, signatures)`.
@@ -81,11 +83,26 @@ MEMBER_SAFE="" PROPOSAL_ID="" RPC_URL=""
 
 while [[ $# -gt 0 ]]; do
 	case "$1" in
-	--member-safe) MEMBER_SAFE="$2"; shift 2 ;;
-	--proposal-id) PROPOSAL_ID="$2"; shift 2 ;;
-	--security-council) SECURITY_COUNCIL="$2"; shift 2 ;;
-	--chain-id) CHAIN_ID="$2"; shift 2 ;;
-	--rpc-url) RPC_URL="$2"; shift 2 ;;
+	--member-safe)
+		MEMBER_SAFE="$2"
+		shift 2
+		;;
+	--proposal-id)
+		PROPOSAL_ID="$2"
+		shift 2
+		;;
+	--security-council)
+		SECURITY_COUNCIL="$2"
+		shift 2
+		;;
+	--chain-id)
+		CHAIN_ID="$2"
+		shift 2
+		;;
+	--rpc-url)
+		RPC_URL="$2"
+		shift 2
+		;;
 	-h | --help) usage ;;
 	*) die "unknown argument $1" ;;
 	esac
