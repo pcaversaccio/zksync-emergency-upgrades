@@ -24,16 +24,22 @@
 #                   The parent (Safe >= 1.3.0) calls the member's legacy
 #                   `isValidSignature(bytes,bytes)` with exactly that preimage.
 #
-# The parent transaction comes from a Safe{Wallet} link (`--safe-link`), which is fetched
-# from the Safe Transaction Service, or from flags (`--to`, `--data`, ...). The script
-# recomputes the `safeTxHash` locally and stops if it differs from the one in the link, so
-# the Safe Transaction Service does not have to be trusted. It prints the calls being
-# approved, then the hashes to sign. With `--rpc-url`, the nonces default to the current
-# on-chain ones, and every hash is cross-checked against the Safe contracts.
+# The parent transaction comes from one of:
+#   - a Safe{Wallet} link (`--safe-link`), which is fetched from the Safe Transaction Service.
+#     The script recomputes the `safeTxHash` locally and stops if it differs from the one in
+#     the link, so the Safe Transaction Service does not have to be trusted.
+#   - a JSON file of transactions (`--json-file`), filtered by `--tag`. This is for checking
+#     a transaction before it is published to Safe{Wallet}, when there is no link yet.
+#   - flags (`--to`, `--data`, ...).
+# It prints the calls being approved, then the hashes to sign. With `--rpc-url`, the nonces
+# default to the current on-chain ones, and every hash is cross-checked against the Safe
+# contracts.
 #
 # Usage:
 #   ./nested_safe_hashes.sh (--onchain-tx | --offchain-sig) --member-safe <address> \
-#       (--safe-link <url> | --to <address> --data <hex> [--value <wei>] [--operation <0|1>] \
+#       (--safe-link <url> \
+#        | --json-file <path> [--tag <tag>] [--multisend <address>] [--nonce <parent nonce>] \
+#        | --to <address> --data <hex> [--value <wei>] [--operation <0|1>] \
 #           [--parent-safe <address>] [--nonce <parent nonce>] [--chain-id <id>]) \
 #       [--member-nonce <member nonce>] [--rpc-url <url>]
 #
@@ -42,6 +48,14 @@
 # `gasPrice`, `gasToken` and `refundReceiver` are 0, which is what Safe{Wallet} uses.
 # Without `--rpc-url`, `--member-nonce` is required for `--onchain-tx`, and so is `--nonce`
 # without `--safe-link`.
+#
+# The JSON file is an array of transactions, each with `from`, `to`, `value` (in ether, e.g.
+# "0" or "1.5"), `data` and `network` (`mainnet` or `sepolia`), and optionally `tag`. The
+# transactions whose `tag` equals `--tag` form the parent transaction. If the file has tags,
+# `--tag` is required. Their `from` is the parent Safe, and `network` sets the chain ID. One
+# transaction becomes a plain call. Several become a `multiSend` batch that the parent Safe
+# delegatecalls; pass the batching contract that Safe{Wallet} will use with `--multisend`
+# (MultiSendCallOnly `v1.4.1` is 0x9641d764fc13c8B624c04430C7356C1C7C8102e2).
 
 # Enable strict error handling:
 # -E: Inherit `ERR` traps in functions and subshells.
@@ -67,7 +81,7 @@ lowercase() {
 }
 
 usage() {
-	sed -n '/^# Usage:/,/^# without `--safe-link`/p' "$0" | sed 's/^# \{0,1\}//' >&2
+	sed -n '/^# Usage:/,/^# (MultiSendCallOnly `v1.4.1`/p' "$0" | sed 's/^# \{0,1\}//' >&2
 	exit 1
 }
 
@@ -99,6 +113,7 @@ readonly MULTI_SEND_ADDRESSES="0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761 0x40A2
 # The mainnet Security Council Safe, owned by the Security Council member Safes.
 PARENT_SAFE="0xDF19897e2b3c654A6681d6DC02F5E7cE15205c63"
 MODE="" MEMBER_SAFE="" SAFE_LINK="" TO="" DATA="" VALUE="0" OPERATION="0" NONCE="" MEMBER_NONCE="" CHAIN_ID="1" RPC_URL=""
+JSON_FILE="" TAG="" TAG_SET="" MULTI_SEND="" PARENT_SAFE_SET=""
 SAFE_TX_GAS="0" BASE_GAS="0" GAS_PRICE="0" GAS_TOKEN="$ZERO_ADDRESS" REFUND_RECEIVER="$ZERO_ADDRESS"
 
 set_mode() {
@@ -125,6 +140,20 @@ while [[ $# -gt 0 ]]; do
 		;;
 	--parent-safe)
 		PARENT_SAFE="$2"
+		PARENT_SAFE_SET=1
+		shift 2
+		;;
+	--json-file)
+		JSON_FILE="$2"
+		shift 2
+		;;
+	--tag)
+		TAG="$2"
+		TAG_SET=1
+		shift 2
+		;;
+	--multisend)
+		MULTI_SEND="$2"
 		shift 2
 		;;
 	--to)
@@ -169,10 +198,13 @@ done
 }
 [[ -n "$MEMBER_SAFE" ]] || usage
 if [[ -n "$SAFE_LINK" ]]; then
-	[[ -z "$TO$DATA$NONCE" ]] || die "pass either --safe-link or --to/--data/--nonce, not both"
+	[[ -z "$TO$DATA$NONCE$JSON_FILE" ]] || die "pass either --safe-link, --json-file or --to/--data/--nonce, not several"
+elif [[ -n "$JSON_FILE" ]]; then
+	[[ -z "$TO$DATA" ]] || die "pass either --json-file or --to/--data, not both"
 else
 	[[ -n "$TO" && -n "$DATA" ]] || usage
 fi
+[[ -n "$JSON_FILE" || -z "$TAG_SET$MULTI_SEND" ]] || die "--tag and --multisend only apply to --json-file"
 [[ "$MODE" == "onchain" || -z "$MEMBER_NONCE" ]] || die "--member-nonce only applies to --onchain-tx"
 
 call() {
@@ -225,7 +257,7 @@ print_call() {
 # data length (32 bytes) || data`.
 print_calls() {
 	if [[ "$OPERATION" == "1" && "$(lowercase "${DATA:0:10}")" == "$MULTI_SEND_SELECTOR" ]]; then
-		[[ " $MULTI_SEND_ADDRESSES " == *" $(lowercase "$TO") "* ]] ||
+		[[ " $(lowercase "$MULTI_SEND_ADDRESSES") " == *" $(lowercase "$TO") "* ]] ||
 			echo "WARNING: the batch is a delegatecall to $TO, which is not a canonical MultiSend contract!"
 		local packed offset=0 index=1 call_operation call_to call_value data_length call_data
 		packed=$(cast calldata-decode "multiSend(bytes)" "$DATA")
@@ -283,6 +315,70 @@ if [[ -n "$SAFE_LINK" ]]; then
 	GAS_TOKEN=$(echo "$tx" | jq -r .gasToken)
 	REFUND_RECEIVER=$(echo "$tx" | jq -r .refundReceiver)
 	NONCE=$(echo "$tx" | jq -r .nonce)
+fi
+
+# Load the parent transaction from a JSON file of transactions, filtered by `--tag`.
+if [[ -n "$JSON_FILE" ]]; then
+	command -v jq >/dev/null || die "jq is required for --json-file"
+	[[ -f "$JSON_FILE" ]] || die "no such file $JSON_FILE"
+	jq -e 'type == "array"' "$JSON_FILE" >/dev/null || die "$JSON_FILE is not a JSON array of transactions"
+	if [[ -z "$TAG_SET" ]]; then
+		jq -e 'all(.[]; .tag == null)' "$JSON_FILE" >/dev/null ||
+			die "the transactions in $JSON_FILE have tags, pass --tag (available: $(jq -r '[.[].tag | select(. != null)] | unique | join(", ")' "$JSON_FILE"))"
+		selected=$(jq -c '.' "$JSON_FILE")
+	else
+		selected=$(jq -c --arg tag "$TAG" '[.[] | select(.tag == $tag)]' "$JSON_FILE")
+	fi
+	count=$(echo "$selected" | jq 'length')
+	[[ "$count" -gt 0 ]] ||
+		die "no transaction in $JSON_FILE has tag '$TAG' (available: $(jq -r '[.[].tag | select(. != null)] | unique | join(", ")' "$JSON_FILE"))"
+	[[ "$(echo "$selected" | jq '[.[].from | ascii_downcase] | unique | length')" == "1" ]] ||
+		die "the selected transactions have different senders (from)"
+	[[ "$(echo "$selected" | jq '[.[].network] | unique | length')" == "1" ]] ||
+		die "the selected transactions are on different networks"
+	json_from=$(echo "$selected" | jq -r '.[0].from')
+	if [[ -n "$PARENT_SAFE_SET" ]]; then
+		[[ "$(lowercase "$json_from")" == "$(lowercase "$PARENT_SAFE")" ]] ||
+			die "the transactions are sent by $json_from, not by --parent-safe $PARENT_SAFE"
+	fi
+	PARENT_SAFE=$json_from
+	network=$(echo "$selected" | jq -r '.[0].network')
+	case "$network" in
+	mainnet) CHAIN_ID="1" ;;
+	sepolia) CHAIN_ID="11155111" ;;
+	*) die "unsupported network '$network' in $JSON_FILE (supported: mainnet, sepolia)" ;;
+	esac
+	# `value` is in ether, as a decimal string.
+	json_to=() json_value=() json_data=()
+	for ((i = 0; i < count; i++)); do
+		json_to+=("$(echo "$selected" | jq -r ".[$i].to")")
+		value_ether=$(echo "$selected" | jq -r ".[$i].value // \"0\"")
+		[[ "$value_ether" =~ ^[0-9]+(\.[0-9]+)?$ ]] || die "transaction $((i + 1)) has a malformed value '$value_ether'"
+		json_value+=("$(cast to-wei "$value_ether" ether)")
+		json_data+=("$(echo "$selected" | jq -r ".[$i].data // \"0x\"")")
+		[[ "${json_data[$i]}" =~ ^0x([0-9a-fA-F]{2})*$ ]] || die "transaction $((i + 1)) has malformed calldata"
+	done
+	if [[ "$count" == "1" ]]; then
+		[[ -z "$MULTI_SEND" ]] || die "--multisend only applies when the tag selects several transactions"
+		TO=${json_to[0]}
+		VALUE=${json_value[0]}
+		DATA=${json_data[0]}
+		OPERATION="0"
+	else
+		[[ -n "$MULTI_SEND" ]] ||
+			die "the tag selects $count transactions, pass --multisend with the batching contract Safe{Wallet} will use"
+		[[ " $(lowercase "$MULTI_SEND_ADDRESSES") " == *" $(lowercase "$MULTI_SEND") "* ]] ||
+			die "--multisend $MULTI_SEND is not a canonical MultiSend contract"
+		packed=""
+		for ((i = 0; i < count; i++)); do
+			hex=${json_data[$i]:2}
+			packed+="00${json_to[$i]:2}$(printf '%064s' "$(cast to-hex "${json_value[$i]}" | sed 's/^0x//')" | tr ' ' 0)$(printf '%064x' $((${#hex} / 2)))${hex}"
+		done
+		TO=$MULTI_SEND
+		VALUE="0"
+		DATA=$(cast calldata "multiSend(bytes)" "0x$(lowercase "$packed")")
+		OPERATION="1"
+	fi
 fi
 [[ "$OPERATION" == "0" || "$OPERATION" == "1" ]] || die "the operation must be 0 (call) or 1 (delegatecall)"
 
@@ -348,6 +444,9 @@ echo ""
 
 echo "=== Parent Safe transaction ==="
 echo "Parent Safe: $PARENT_SAFE (chain ID $CHAIN_ID)"
+if [[ -n "$JSON_FILE" ]]; then
+	echo "Source: $JSON_FILE$([[ -n "$TAG_SET" ]] && echo ", tag $TAG")"
+fi
 echo "to: $TO"
 echo "value: $VALUE"
 echo "operation: $OPERATION ($([[ "$OPERATION" == "0" ]] && echo call || echo delegatecall))"

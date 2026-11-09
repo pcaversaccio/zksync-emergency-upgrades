@@ -283,6 +283,19 @@ safeTxHash: 0xfc69e5001315d483240430f55dadaf20ffca82cea02fc73c639c544ea76d0bdb
 
 Function names are looked up with `cast 4byte-decode`, and the arguments are decoded locally. Without the Safe Transaction Service, pass the transaction as `--to`, `--data`, `--value`, `--operation` and `--nonce` instead of `--safe-link`.
 
+Before a transaction is published to Safe{Wallet}, there is no link to pass. Pass a JSON file of transactions with `--json-file`, the tag of the transaction with `--tag`, and the Security Council Safe's nonce it will use with `--nonce`. The output has the same format, so the hashes can be compared once the transaction is published. The file is an array of transactions, each with `from` (the parent Safe), `to`, `value` (in ether), `data`, `network` (`mainnet` or `sepolia`) and `tag`. Example, the `scheduleTransparent` call of an upgrade's stage 0:
+
+```console
+./standard-upgrades/nested_safe_hashes.sh --onchain-tx \
+  --member-safe 0xc3Abc9f9AA75Be8341E831482cdA0125a7B1A23e \
+  --json-file upgrade.json \
+  --tag stage0-schedule \
+  --nonce 1 \
+  --member-nonce 20
+```
+
+If the tag selects several transactions, the parent Safe sends them as one `multiSend` batch. Pass the batching contract that Safe{Wallet} will use with `--multisend`, e.g. MultiSendCallOnly `v1.4.1` [`0x9641d764fc13c8B624c04430C7356C1C7C8102e2`](https://etherscan.io/address/0x9641d764fc13c8B624c04430C7356C1C7C8102e2). The calls are batched in the file's order.
+
 ### Security Council Approval of Protocol Upgrades
 
 A standard protocol upgrade passes through the `ProtocolUpgradeHandler`, and the Security Council approves it with `SecurityCouncil.approveUpgradeSecurityCouncil`. Each member Safe signs an off-chain `SafeMessage` over the EIP-712 message `ApproveUpgradeSecurityCouncil(bytes32 id)`. [`safe_hashes_security_council_approve_upgrade.sh`](./standard-upgrades/safe_hashes_security_council_approve_upgrade.sh) takes the proposal ID:
