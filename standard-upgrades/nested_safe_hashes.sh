@@ -104,6 +104,7 @@ readonly SAFE_MSG_TYPEHASH="0x60b3cbf8b4a223d68d641b3b6ddf9a298e7f33710cf3d3a9d1
 readonly APPROVE_HASH_SELECTOR="0xd4d9bdcd"
 # => `bytes4(keccak256("multiSend(bytes)"));`
 readonly MULTI_SEND_SELECTOR="0x8d80ff0a"
+readonly DECODE_CALLDATA="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/decode_calldata.sh"
 readonly ZERO_ADDRESS="0x0000000000000000000000000000000000000000"
 
 # The canonical `MultiSend` and `MultiSendCallOnly` deployments (`v1.3.0` and `v1.4.1`), the only
@@ -234,22 +235,16 @@ safe_get_transaction_hash() {
 	call "$safe" "getTransactionHash(address,uint256,bytes,uint8,uint256,uint256,uint256,address,address,uint256)(bytes32)" "$@"
 }
 
-# Prints one call: its target, value, calldata and the calldata decoded via `cast 4byte-decode`.
-# The function signature comes from a public signature database, the arguments are decoded locally.
+# Prints one call: its target, value, calldata and the calldata decoded by `decode_calldata.sh`,
+# which also decodes the calls nested in it, such as the calls of a `Governance` operation.
 print_call() {
 	local index=$1 to=$2 value=$3 data=$4
 	echo "Call $index:"
 	echo "  to: $(cast to-check-sum-address "$to")"
 	echo "  value: $value wei"
 	echo "  data: $data"
-	if [[ ${#data} -lt 10 ]]; then
-		echo "  decoded: (no calldata)"
-	elif decoded=$(cast 4byte-decode "$data" 2>/dev/null) && [[ -n "$decoded" ]]; then
-		echo "  decoded:"
-		echo "$decoded" | sed 's/^/    /'
-	else
-		echo "  decoded: unknown selector ${data:0:10}"
-	fi
+	echo "  decoded:"
+	"$DECODE_CALLDATA" "$data" 4
 }
 
 # Prints the calls of the parent transaction, splitting a `multiSend` batch into its calls.

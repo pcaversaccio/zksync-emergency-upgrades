@@ -249,7 +249,7 @@ Call 1:
   value: 0 wei
   data: 0x79ba5097
   decoded:
-    acceptOwnership()
+    function: acceptOwnership()
 
 === Parent Safe transaction ===
 Parent Safe: 0xDF19897e2b3c654A6681d6DC02F5E7cE15205c63 (chain ID 1)
@@ -281,7 +281,9 @@ Message hash: 0x608AC06E38F20A236D1220CE4A2E138E445DE9BBB6C40E97D79567070D796C76
 safeTxHash: 0xfc69e5001315d483240430f55dadaf20ffca82cea02fc73c639c544ea76d0bdb
 ```
 
-Function names are looked up with `cast 4byte-decode`, and the arguments are decoded locally. Without the Safe Transaction Service, pass the transaction as `--to`, `--data`, `--value`, `--operation` and `--nonce` instead of `--safe-link`.
+Each call is decoded by [`decode_calldata.sh`](./standard-upgrades/decode_calldata.sh), which also decodes every `bytes` argument that is itself a call. For `Governance`'s `scheduleTransparent` and `execute`, this shows each call of the operation, decoded, so it is visible what actually gets executed. The operation ID is printed too, so a `scheduleTransparent` can be matched with its `execute`. Protocol versions are shown as `vX.Y.Z`. Signatures and argument names come from [`known_functions.jsonl`](./standard-upgrades/known_functions.jsonl), which lists the functions of the ZKsync contracts. A selector that isn't listed is looked up with `cast 4byte-decode` and flagged with a warning. The decoder also works on its own: `./standard-upgrades/decode_calldata.sh <calldata>`.
+
+Without the Safe Transaction Service, pass the transaction as `--to`, `--data`, `--value`, `--operation` and `--nonce` instead of `--safe-link`.
 
 Before a transaction is published to Safe{Wallet}, there is no link to pass. Pass a JSON file of transactions with `--json-file`, the tag of the transaction with `--tag`, and the Security Council Safe's nonce it will use with `--nonce`. The output has the same format, so the hashes can be compared once the transaction is published. The file is an array of transactions, each with `from` (the parent Safe), `to`, `value` (in ether), `data`, `network` (`mainnet` or `sepolia`) and `tag`. Example, the `scheduleTransparent` call of an upgrade's stage 0:
 
